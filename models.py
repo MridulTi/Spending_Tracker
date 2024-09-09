@@ -21,6 +21,7 @@ class User(db.Model):
 
 class Transaction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), nullable=False) 
     amount = db.Column(db.Float, nullable=False)
     location = db.Column(db.String(255), nullable=True)
     date = db.Column(db.Date, nullable=False)
@@ -33,6 +34,7 @@ class Transaction(db.Model):
     def to_json(self):
         return {
             "id": self.id,
+            "username":self.username,
             "amount": self.amount,
             "location": self.location,
             "date": self.date.strftime('%d-%m-%Y') if self.date else None,
@@ -41,4 +43,13 @@ class Transaction(db.Model):
             "category": self.category,
             "frequency": self.frequency,
             "description": self.description
+        }
+    
+class UserSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), nullable=False)
+    def to_json(self):
+        return {
+            "id": self.id,
+            "username":self.username,
         }

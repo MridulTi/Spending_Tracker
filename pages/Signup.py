@@ -13,7 +13,7 @@ ALLOWED_TYPES = [
 ]
 
 layout = html.Div([
-    dcc.Location(id='redirect-location', refresh=True),
+    dcc.Location(id='redirect-location'),
     html.Div([
         html.Div([
             
@@ -39,7 +39,7 @@ layout = html.Div([
                 ),
                 dcc.Link(
                     "Login!",
-                    href="/",
+                    href="/app/login",
                     className="text-blue-500 text-center w-full font-medium text-md underline hover:text-blue-700"
                 )
             ], className="w-full flex flex-col items-center gap-2")
@@ -72,7 +72,7 @@ def signup_user(n_clicks, firstname, lastname, email, username, password):
         try:
             response = requests.post("http://localhost:8050/api/v1/auth/register", json=data)
             if response.status_code == 200:
-                return "/"
+                return "/app/"
             else:
                 print(f"Failed to sign up. Status code: {response.status_code}")
         except Exception as e:

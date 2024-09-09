@@ -1,31 +1,35 @@
-from flask import Blueprint,jsonify,request,session,redirect
-from models import Transaction
+from flask import Blueprint,jsonify,request,current_app,redirect
+from models import Transaction,User,UserSession
 from config import db
-from utils.RenderResponse import RenderResponse
 from constants.https_status_codes import *
 from utils.ApiError import ApiError
 from utils.ApiResponse import ApiResponse
 from datetime import datetime
-from sqlalchemy import text
 
 transact=Blueprint("transact",__name__,url_prefix="/api/v1/transact")
 
-@transact.route("/",methods=['GET'])
+@transact.route("/", methods=['GET','POST'])
 def transact_get_all():
-    all_transaction=Transaction.query.all()
-    if not all_transaction:
-        return ApiError("Transactions not made",HTTP_400_BAD_REQUEST)
-    return jsonify([{
-        "id":transaction.id,
-        "amount":transaction.amount,
-        "location":transaction.location,
-        "date":transaction.date,
-        "payment_method":transaction.payment_method,
-        "is_recurring":transaction.is_recurring,
-        "category":transaction.category,
-        "frequency":transaction.frequency,
-        "description":transaction.description
-        } for transaction in all_transaction]), 200
+    user=UserSession.query.first_or_404().username
+    print(user)
+    user_transactions = Transaction.query.filter_by(username=user).all()
+    
+    if not user_transactions:
+        return ApiError("No transactions found for the current user", HTTP_400_BAD_REQUEST)
+    
+    transactions_json = [{
+        "id": transaction.id,
+        "amount": transaction.amount,
+        "location": transaction.location,
+        "date": transaction.date.strftime('%Y-%m-%d') if transaction.date else None,
+        "payment_method": transaction.payment_method,
+        "is_recurring": transaction.is_recurring,
+        "category": transaction.category,
+        "frequency": transaction.frequency,
+        "description": transaction.description
+    } for transaction in user_transactions]
+
+    return jsonify(transactions_json), 200
 
 @transact.route("/all",methods=['DELETE'])
 def delete_all():
@@ -35,35 +39,38 @@ def delete_all():
 
 @transact.route("/create-transaction",methods=['POST'])
 def create_transaction():
-    data=request.json
-
-    new_transaction=Transaction(
+    user=UserSession.query.first_or_404().username
+    data = request.json
+    
+    new_transaction = Transaction(
         amount=data['amount'],
+        username=user,
         location=data['location'],
-        date= datetime.strptime(data['date'], '%Y-%m-%d').date(),
+        date=datetime.strptime(data['date'], '%Y-%m-%d').date(),
         payment_method=data['payment_method'],
         is_recurring=data['is_recurring'],
         category=data['category'],
-        frequency=data['frequency'],
-        description=data['description']
+        frequency=data.get('frequency'),
+        description=data.get('description')
     )
-    if not new_transaction:
-        return ApiError("Transaction not created!")
-    
+
     db.session.add(new_transaction)
     db.session.commit()
-    return ApiResponse("Transaction Created!",HTTP_200_OK,new_transaction.to_json())
+
+    return ApiResponse("Transaction created successfully", HTTP_200_OK, new_transaction.to_json())
 
 
 @transact.route("/num_transaction",methods=['GET'])
 def num_transactions():
+    user=UserSession.query.first_or_404().username
+
     total_amount_spent=db.session.query(db.func.sum(Transaction.amount)).scalar() or 0
     average_transaction_amount= db.session.query(db.func.avg(Transaction.amount)).scalar() or 0
     highest_transaction_amount=db.session.query(db.func.max(Transaction.amount)).scalar() or 0
-    total_transactions_per_category=db.session.query(
+    total_transactions_per_category = db.session.query(
         Transaction.category,
         db.func.count().label('num_transactions')
-    ).group_by(Transaction.category).all()
+    ).filter_by(username=user).group_by(Transaction.category).all()
 
     data = {
         "total_amount_spent": total_amount_spent,

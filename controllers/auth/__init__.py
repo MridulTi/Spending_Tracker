@@ -1,12 +1,13 @@
-from flask import Blueprint,jsonify,request,session,redirect
-from models import User
-from config import db
-from utils.RenderResponse import RenderResponse
+from flask import Blueprint,jsonify,request,session,g,make_response,current_app
+from models import User,UserSession
+from config import db,jwt
 from constants.https_status_codes import *
 from utils.ApiError import ApiError
 from utils.ApiResponse import ApiResponse
 
 auth=Blueprint("auth",__name__,url_prefix="/api/v1/auth")
+
+# USERNMAE="mridulti"
 
 @auth.route("/",methods=['GET'])
 def index():
@@ -26,12 +27,32 @@ def add_user():
 def login():
     data=request.json
     checked_user=User.query.filter_by(email=data['email']).first()
-    if not checked_user:
-        return ApiError("User not Found",HTTP_400_BAD_REQUEST)
-    if checked_user.password==data['password']:
-        return ApiResponse("User Loggedin",HTTP_200_OK,checked_user.to_json())
+
+    if checked_user and checked_user.password==data['password']:
+
+        resp = make_response(jsonify({"user":checked_user.to_json()}))
+        
+        user_session= UserSession(username=checked_user.username)
+        db.session.add(user_session)
+        db.session.commit()
+        return resp
+    return ApiError("Invalid credentials", HTTP_400_BAD_REQUEST)
+    
 
 @auth.route('/get_users', methods=['GET'])
 def get_users():
     users = User.query.all()
     return jsonify([{"id": user.id, "username": user.username, "email": user.email} for user in users]), 200
+
+@auth.route("/current-username",methods=['GET'])
+def get_current_user():
+    user=UserSession.query.first_or_404().username
+    return jsonify({"user":user})
+
+@auth.route("/logout", methods=['GET','POST'])
+def logout():
+    user=UserSession.query.first_or_404()
+    db.session.delete(user)
+    db.session.commit()
+    resp = make_response(ApiResponse("User Logged Out", HTTP_200_OK))
+    return resp

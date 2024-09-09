@@ -13,22 +13,16 @@ navbar = html.Div([
         html.H1("Transact", className="text-black font-bold py-6 text-3xl text-center"),
         html.Div([
             html.A(
-                html.H2("Home", className="text-black w-full p-2 font-semibold rounded-md bg-cyan-100 text-lg tracking-wider"),
-                href="/home", className="w-full"
+                html.H2("Home", className="text-black w-full p-2 font-semibold rounded-md active:bg-cyan-100 text-lg tracking-wider"),
+                href="/app/dashboard", className="w-full"
             ),
             html.A(
-                html.H2("Spending Updates", className="text-black font-semibold active:bg-cyan-100 w-full p-2 rounded-md text-lg tracking-wider"),
-                href="/spending-updates", className="w-full"
+                html.H2("Spending Updates", className="text-black font-semibold bg-cyan-100 w-full p-2 rounded-md text-lg tracking-wider"),
+                href="/app/spending-updates", className="w-full"
             ),
         ], className="flex flex-col gap-2 w-full"),
     ], className="flex flex-col h-full"),
-    html.Div(
-        html.A(
-            html.H2("Logout",id="logout-btn", className="text-black w-full p-2 text-lg bg-red-800 text-white hover:bg-red-600 tracking-wider"),
-            href="/", className="w-full"
-        ),
-        className="mt-auto"
-    ),
+    
 ], className="w-52 lg:w-64 h-screen bg-white flex fixed left-0 flex-col")
 
 
@@ -117,7 +111,7 @@ form_screen = html.Div([
 
 layout = html.Div(
     children=[
-        dcc.Location(id='relocation', refresh=True),
+        dcc.Location(id='relocation'),
         navbar, form_screen
     ], 
     className="min-h-screen w-full flex flex-col md:flex-row gap-4 bg-neutral-200 text-white"
@@ -154,7 +148,7 @@ def handle_transaction_submission(n_clicks, amount, location, date, payment_meth
         try:
             response = requests.post("http://localhost:8050/api/v1/transact/create-transaction", json=data)
             if response.status_code == 200:
-                return '/dashboard'
+                return '/app/dashboard'
             else:
                 print(f"Error: {response.status_code} - {response.text}")
         except Exception as e:

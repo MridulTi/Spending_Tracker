@@ -12,7 +12,7 @@ ALLOWED_TYPES = [
 
 
 layout=html.Div([
-    dcc.Location(id='redirect-url', refresh=True),
+    dcc.Location(id='redirect-url',refresh=True),
     html.Div([
         html.Div([
             
@@ -38,12 +38,12 @@ layout=html.Div([
                 ),
                 dcc.Link(
                     "Signup!",
-                    href="/Signup",
+                    href="/app/Signup",
                     className="text-blue-500 text-center w-full font-medium text-md underline hover:text-blue-700"
                 )
             ], className="w-full flex flex-col items-center gap-2")
         ], className="bg-white text-black rounded-xl px-6 py-6 w-full max-w-md") 
-    ], className="grid place-items-center h-full px-4")
+    ], className="grid place-items-center h-full px-4"),
 ], className="h-screen w-full bg-gradient-to-t from-violet-500 to-fuchsia-500 text-white")
 
 
@@ -58,7 +58,6 @@ layout=html.Div([
 
 def login_user(n_clicks, email, username, password):
     if n_clicks:
-        # Collect input data
         data = {
             "email": email,
             "username": username,
@@ -67,11 +66,10 @@ def login_user(n_clicks, email, username, password):
         print(data)
         try:
             response = requests.post("http://localhost:8050/api/v1/auth/login", json=data)
-            print(response.json()['status'])
-            if response.json()['status'] == 200:
-                return "/dashboard"
+            if response.status_code == 200:
+                return "/app/dashboard"
             else:
-                print(f"Failed to authenticate. Status code: {response.status}")
+                print(f"Failed to authenticate. Status code: {response.status_code}")
         except Exception as e:
             print(f"Error occurred while making the request: {str(e)}")
     return None
