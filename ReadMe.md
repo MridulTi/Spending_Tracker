@@ -24,30 +24,30 @@ The **Spending Tracker** is a web-based application that allows users to track t
 1. Clone the repository:
    ```bash
    git clone https://github.com/MridulTi/Spending_Tracker.git .
-   ```bash
+
 2. Create a virtual environment and activate it:
     ```bash
     python -m venv .venv
     source .venv/Scripts/activate
-    ```bash
+
 
 3. Install the required packages:
 
     ```bash
     pip install flask dash flask_cors flask_sqlalchemy dash_auth dash_bootstrap_components plotly.express datetime flask_jwt_extended
-    ```bash
+
 
 4. Run the app:
     ```bash
     py app.py
-    ```bash
+
     
 5. Register or log in with the following credentials:
     ```bash
     Email: mridul@chotu.com
     Username: mridulti
     Password: mridul
-    ```bash
+
 
 6. You can also create your own account.
 
